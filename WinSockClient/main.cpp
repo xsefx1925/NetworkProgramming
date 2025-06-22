@@ -73,41 +73,41 @@ void main()
 			NULL
 		);
 		cout << szBuffer << endl;
-		
+
 		LocalFree(szBuffer);
 		*/
 		freeaddrinfo(result);
-			WSACleanup();
-			return;
+		WSACleanup();
+		return;
 	}
 	//4 Подключаемся к серверу:
 	iResult = connect(connect_socket, result->ai_addr, result->ai_addrlen);
-	
+
 	if (iResult == SOCKET_ERROR)
 	{
-/*
-		DWORD dwMessageID = WSAGetLastError();
-		cout << "Error: Connect to Server failed with code: " << WSAGetLastError() << endl;
-		LPSTR szBuffer = NULL;
-		FormatMessage
-		(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			dwMessageID,
-			MAKELANGID(LANG_NEUTRAL,SUBLANG_RUSSIAN_RUSSIA),
-			(LPSTR)&szBuffer,
-			0,
-			NULL
-		);
-		cout << szBuffer << endl;
-		LocalFree(szBuffer);
-		
-		DWORD dwMessageID = WSAGetLastError();
-		LPSTR szMessage = FormatLastError(dwMessageID);
+		/*
+				DWORD dwMessageID = WSAGetLastError();
+				cout << "Error: Connect to Server failed with code: " << WSAGetLastError() << endl;
+				LPSTR szBuffer = NULL;
+				FormatMessage
+				(
+					FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					NULL,
+					dwMessageID,
+					MAKELANGID(LANG_NEUTRAL,SUBLANG_RUSSIAN_RUSSIA),
+					(LPSTR)&szBuffer,
+					0,
+					NULL
+				);
+				cout << szBuffer << endl;
+				LocalFree(szBuffer);
 
-		printf("Error %i:%s", dwMessageID, szMessage);
-		LocalFree(szMessage);
-		*/
+				DWORD dwMessageID = WSAGetLastError();
+				LPSTR szMessage = FormatLastError(dwMessageID);
+
+				printf("Error %i:%s", dwMessageID, szMessage);
+				LocalFree(szMessage);
+				*/
 		PrintLastError(WSAGetLastError());
 		closesocket(connect_socket);
 		freeaddrinfo(result);
@@ -115,25 +115,35 @@ void main()
 		return;
 	}
 	//5)Отправка и получение данных с сервера:
-	CONST CHAR sendbuffer[] = "Hello Server, I am client";
+    CHAR sendbuffer[DEFAULT_BUFFER_LENGTH] = "Hello Server, I am client";
 	CHAR recvbuffer[DEFAULT_BUFFER_LENGTH] = {};
-	iResult = send(connect_socket, sendbuffer, sizeof(sendbuffer), 0);
-	if (iResult == SOCKET_ERROR)
+	do
 	{
+	//
+	   iResult = send(connect_socket, sendbuffer, sizeof(sendbuffer), 0);
+	   if (iResult == SOCKET_ERROR)
+	   {
 		PrintLastError(WSAGetLastError());
 		closesocket(connect_socket);
 		freeaddrinfo(result);
 		WSACleanup();
 		return;
-	}
-	do
-	{
+	   }
+	     //iResult = shutdown(connect_socket, SD_SEND);
+	     //if (iResult == SOCKET_ERROR)PrintLastError(WSAGetLastError());
+
+	  //  {
 		iResult = recv(connect_socket, recvbuffer, DEFAULT_BUFFER_LENGTH, 0);
-		if (iResult > 0)cout << "Receved bytes: " << iResult << ", Message: " << recvbuffer << endl; 
+		if (iResult > 0)cout << "Receved bytes: " << iResult << ", Message: " << recvbuffer << endl;
 		else if (iResult == 0)cout << "Connection closing" << endl;
 		else PrintLastError(WSAGetLastError());
-	} while (iResult > 0);
-
+	    
+		cout << "Введите сообщение: ";
+		SetConsoleCP(1251);
+		cin.getline(sendbuffer, DEFAULT_BUFFER_LENGTH);
+		SetConsoleCP(866);
+	} while (iResult > 0 && strcmp(sendbuffer, "exit"));
+    //   }while (true);
 	//6) Закрываем соединение:
 	iResult = shutdown(connect_socket, SD_SEND);
 	if (iResult == SOCKET_ERROR)
@@ -142,7 +152,7 @@ void main()
 	closesocket(connect_socket);
 	FreeAddrInfo(result); 
 		WSACleanup();
-	}
+}
 /*
 LPSTR FormatLastError(DWORD dwMessageID)
 {
